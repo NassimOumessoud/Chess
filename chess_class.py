@@ -1,11 +1,12 @@
 import numpy as np 
-
+import click
 """
 1. Initialize board and pieces (images) and starting positions for each piece.
 2. Determine whose turn it is
 3. determine all legal moves
 
 """
+
 
 class Piece():
     """Class that, given the name and starting position of a chess piece 
@@ -127,27 +128,61 @@ class Piece():
         return options
     
     
-    def move(self, position,new_position):
-        self.legal_moves()
+    def move(self, position, new_position):
+        if new_position in self.legal_moves(position):
+            return new_position
+        
         
     def take():
         pass
-
-def board(start, positions):
-    squares = 8
-    grid = np.full((squares, squares), '-', dtype=str)
-    for position in positions:
-        y = position[0]
-        x = position[1]
-        grid[y, x] = 'o'
-    grid[start[0], start[1]] = 'x'
-    print(grid)
     
     
-
-queen = Piece('king', [3, 7])
-for i in range(8):
-    for j in range(8):
-        spot = [i, j]
-        board(spot, queen.legal_moves(spot))
+def placer(displace, row=[0, 7], amount=2):
+    positions = []
+    
+    if amount == 2:
+        for i in range(amount):
+            x = displace[i]   
+            y = row[i]
+            positions.append([y, x])
         
+    if amount > 2:
+        sign = [1, -1]
+        for i in range(2):
+            y = row[i] + sign[i]
+            
+            for dis in displace:
+                x = dis
+                positions.append([y, x])
+                
+    return positions
+            
+def board(starts):
+    squares = 8
+    grid = np.full((squares, squares), '--', dtype=np.dtype('U100'))
+    for start in starts:
+        print(start[2])
+        grid[start[0], start[1]] = start[2]
+    return grid
+
+
+@click.command()
+@click.option('--menu', prompt="""Welcome to our 1v1 chess player, please type 'start' to play.
+                                  To see the game rules please type: 'rules'
+                                  To see a tutorial please type: 'tutorial'""",
+              help='The main menu')
+def init(menu):
+    if menu.lower() == 'start':
+        click.echo("Let's start!")
+        color_pawns = ['Bp', 'Wp']
+        pawns = []
+        
+        for color in color_pawns:
+            pawns.append([placer([i for i in range(8)], amount=8), color])
+    game = board(pawns)
+    click.echo(game)
+    
+if __name__ == '__main__':
+    init()
+
+
