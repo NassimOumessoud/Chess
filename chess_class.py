@@ -147,13 +147,14 @@ def placer(displace, row=[0, 7], amount=2):
             positions.append([y, x])
         
     if amount > 2:
+        names = ['Bp', 'Wp']
         sign = [1, -1]
         for i in range(2):
             y = row[i] + sign[i]
-            
+            name = names[i]
             for dis in displace:
                 x = dis
-                positions.append([y, x])
+                positions.append([y, x, name])
                 
     return positions
             
@@ -173,12 +174,10 @@ def board(starts):
               help='The main menu')
 def init(menu):
     if menu.lower() == 'start':
-        click.echo("Let's start!")
-        color_pawns = ['Bp', 'Wp']
-        pawns = []
+        click.echo("Let's start!")    
         
-        for color in color_pawns:
-            pawns.append([placer([i for i in range(8)], amount=8), color])
+    pawns = placer([i for i in range(8)], amount=8)
+    print(pawns)
     game = board(pawns)
     click.echo(game)
     
