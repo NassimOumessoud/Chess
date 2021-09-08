@@ -137,17 +137,28 @@ class Piece():
         pass
     
     
-def placer(displace, row=[0, 7], amount=2):
+def placer(displace, names, amount=2):
     positions = []
+    row = [0, 7]
+    
+    
+    if amount < 2:
+        for i in range(len(names)):
+            x = displace
+            y = row[i]
+            name = names[i]
+            positions.append([y, x, name])
+    
     
     if amount == 2:
         for i in range(amount):
-            x = displace[i]   
-            y = row[i]
-            positions.append([y, x])
+            y = row[i] 
+            name = names[i]
+            for k in range(amount):
+                x = displace[k]
+                positions.append([y, x, name])
         
     if amount > 2:
-        names = ['Bp', 'Wp']
         sign = [1, -1]
         for i in range(2):
             y = row[i] + sign[i]
@@ -176,9 +187,16 @@ def init(menu):
     if menu.lower() == 'start':
         click.echo("Let's start!")    
         
-    pawns = placer([i for i in range(8)], amount=8)
-    print(pawns)
-    game = board(pawns)
+    pawns = placer([i for i in range(8)], ['Bp', 'Wp'], amount=8)
+    rooks = placer([0, 7], ['Br', 'Wr'])
+    horses = placer([1, 6], ['Bh', 'Wh'])
+    bishops = placer([2, 5], ['Bb', 'Wb'])
+    queen = placer(3, ['BQ', 'WQ'], amount = 1)
+    kings = placer(4, ['BK', 'WK'], amount = 1)
+    total = pawns + rooks + horses + bishops + queen + kings
+    
+    print(total)
+    game = board(total)
     click.echo(game)
     
 if __name__ == '__main__':
