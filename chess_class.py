@@ -2,23 +2,21 @@ import numpy as np
 import click
 """
 1. Initialize board and pieces (images) and starting positions for each piece.
-2. Determine whose turn it is
-3. determine all legal moves
-
+    By using functions.
+2. Use Class to determine next moves and legal moves, starting game is an instance of the class
 """
 
 
-class Piece():
+class Board():
     """Class that, given the name and starting position of a chess piece 
        can determine its possible future positions and move the piece. 
        
     """
-    def __init__(self, name, init_position):
-        self.name = name
-        self.starting_position = init_position
+    def __init__(self, game):
+        self.game = game
                 
                     
-    def legal_moves(self, position):
+    def legal_moves(name, position):
         """Function that for each chess piece determines the possible spots it 
         can move to."""
         
@@ -42,22 +40,21 @@ class Piece():
                 return [ym, xm]
             
 
-        if self.name == 'pawn':
-            
-            if position != self.starting_position:
-                options = [position[0], position[1] + 1]
-                
-            elif position == self.starting_position:
-                options = [[position[0], position[1] + 1], 
-                          [position[0], position[1] + 2]]
+        if name == 'p':
+#            if position != self.starting_position:
+            options = [position[0], position[1] + 1]
+#                
+#            elif position == self.starting_position:
+#                options = [[position[0], position[1] + 1], 
+#                          [position[0], position[1] + 2]]
     
     
-        if self.name == 'rook':
+        if name == 'r':
             options = [[[tile, position[1]] for tile in tiles],
                       [[position[0], tile] for tile in tiles]]
                        
             
-        if self.name == 'horse':
+        if name == 'h':
             displace = [-2, -1, 1, 2]
             options = []
             for i in displace:
@@ -74,14 +71,14 @@ class Piece():
                         continue
             
             
-        if self.name == 'bishop':
+        if name == 'b':
             options = []
             for tile in tiles:
                 options.append([position[0], tile])
                 options.append([tile, position[1]])
                 
                 
-        if self.name == 'queen':
+        if name == 'Q':
             options = []
                     
             for tile in tiles:
@@ -103,7 +100,7 @@ class Piece():
                     options.append([ym, xm])
                     
                         
-        if self.name == 'king':
+        if name == 'K':
             options = []
             signs = [-1, 1]
             for i in signs:
@@ -128,13 +125,22 @@ class Piece():
         return options
     
     
-    def move(self, position, new_position):
-        if new_position in self.legal_moves(position):
-            return new_position
+    @click.command()
+    @click.option('--positions', prompt='What will be your next move?',
+                  help='Type two positions to move a piece from position 1 to position 2')
+    def move(self, positions):
+        print(positions.split(', ')[0])
+        old = positions.split(', ')[0]
+        new = positions.split(', ')[1]
+
         
-        
-    def take():
-        pass
+        name = self.game[old]
+        if new in Board.legal_moves(name):    
+            self.game[new] = name
+            self.game[old] = '--'
+            print(self.game)
+        else:
+            print('This is not a valid move')
     
     
 def placer(displace, names, amount=2):
@@ -168,36 +174,41 @@ def placer(displace, names, amount=2):
                 positions.append([y, x, name])
                 
     return positions
-            
+     
+       
 def board(starts):
     squares = 8
     grid = np.full((squares, squares), '--', dtype=np.dtype('U100'))
     for start in starts:
-        print(start[2])
         grid[start[0], start[1]] = start[2]
     return grid
 
 
 @click.command()
-@click.option('--menu', prompt="""Welcome to our 1v1 chess player, please type 'start' to play.
-                                  To see the game rules please type: 'rules'
-                                  To see a tutorial please type: 'tutorial'""",
-              help='The main menu')
+@click.argument('menu')
 def init(menu):
     if menu.lower() == 'start':
         click.echo("Let's start!")    
         
-    pawns = placer([i for i in range(8)], ['Bp', 'Wp'], amount=8)
-    rooks = placer([0, 7], ['Br', 'Wr'])
-    horses = placer([1, 6], ['Bh', 'Wh'])
-    bishops = placer([2, 5], ['Bb', 'Wb'])
-    queen = placer(3, ['BQ', 'WQ'], amount = 1)
-    kings = placer(4, ['BK', 'WK'], amount = 1)
-    total = pawns + rooks + horses + bishops + queen + kings
+        pawns = placer([i for i in range(8)], ['Bp', 'Wp'], amount=8)
+        rooks = placer([0, 7], ['Br', 'Wr'])
+        horses = placer([1, 6], ['Bh', 'Wh'])
+        bishops = placer([2, 5], ['Bb', 'Wb'])
+        queen = placer(3, ['BQ', 'WQ'], amount = 1)
+        kings = placer(4, ['BK', 'WK'], amount = 1)
+        setup = pawns + rooks + horses + bishops + queen + kings
+        
     
-    print(total)
-    game = board(total)
-    click.echo(game)
+        game = board(setup)
+        play = Board(game)
+        click.echo(game)
+        
+        play.move()
+    
+
+    elif menu.lower() == 'rules':
+        pass
+    
     
 if __name__ == '__main__':
     init()
