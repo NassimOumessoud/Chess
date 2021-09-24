@@ -10,7 +10,6 @@ import click
 class Board():
     """Class that, given the name and starting position of a chess piece 
        can determine its possible future positions and move the piece. 
-       
     """
     def __init__(self, game):
         self.game = game
@@ -124,15 +123,16 @@ class Board():
                     
         return options
     
-    
     @click.command()
-    @click.option('--positions', prompt='What will be your next move?',
-                  help='Type two positions to move a piece from position 1 to position 2')
+    @click.option('--positions', prompt='What will be you next move?', help='Type two positions in chess format. The piece on position 1 will move to position 2.')
     def move(self, positions):
-        print(positions.split(', ')[0])
-        old = positions.split(', ')[0]
-        new = positions.split(', ')[1]
 
+
+        letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+        print(positions)
+        old = positions[0] 
+        new = positions[1]
+        
         
         name = self.game[old]
         if new in Board.legal_moves(name):    
@@ -184,32 +184,26 @@ def board(starts):
     return grid
 
 
-@click.command()
-@click.argument('menu')
-def init(menu):
-    if menu.lower() == 'start':
-        click.echo("Let's start!")    
+def init():
+    """Initialization function."""
+
         
-        pawns = placer([i for i in range(8)], ['Bp', 'Wp'], amount=8)
-        rooks = placer([0, 7], ['Br', 'Wr'])
-        horses = placer([1, 6], ['Bh', 'Wh'])
-        bishops = placer([2, 5], ['Bb', 'Wb'])
-        queen = placer(3, ['BQ', 'WQ'], amount = 1)
-        kings = placer(4, ['BK', 'WK'], amount = 1)
-        setup = pawns + rooks + horses + bishops + queen + kings
-        
-    
-        game = board(setup)
-        play = Board(game)
-        click.echo(game)
-        
-        play.move()
+    pawns = placer([i for i in range(8)], ['Bp', 'Wp'], amount=8)
+    rooks = placer([0, 7], ['Br', 'Wr'])
+    horses = placer([1, 6], ['Bh', 'Wh'])
+    bishops = placer([2, 5], ['Bb', 'Wb'])
+    queen = placer(3, ['BQ', 'WQ'], amount = 1)
+    kings = placer(4, ['BK', 'WK'], amount = 1)
+    setup = pawns + rooks + horses + bishops + queen + kings
     
 
-    elif menu.lower() == 'rules':
-        pass
+    game = board(setup)
+    play = Board(game)
+    click.echo(game)
+
+    play.move()
     
-    
+
 if __name__ == '__main__':
     init()
 
