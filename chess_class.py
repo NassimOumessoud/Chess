@@ -13,7 +13,7 @@ class Board():
     """
     def __init__(self, game):
         self.game = game
-                
+
                     
     def legal_moves(name, position):
         """Function that for each chess piece determines the possible spots it 
@@ -43,10 +43,16 @@ class Board():
 #            if position != self.starting_position:
             options = [position[0], position[1] + 1]
 #                
-#            elif position == self.starting_position:
-#                options = [[position[0], position[1] + 1], 
-#                          [position[0], position[1] + 2]]
-    
+
+        name = name[1]
+        print(name)
+
+
+        if name == 'p':
+            options = [[position[0], position[1] + 1], 
+                        [position[0], position[1] + 2]]
+            print(options)
+        
     
         if name == 'r':
             options = [[[tile, position[1]] for tile in tiles],
@@ -123,25 +129,38 @@ class Board():
                     
         return options
     
-    @click.command()
-    @click.option('--positions', prompt='What will be you next move?', help='Type two positions in chess format. The piece on position 1 will move to position 2.')
-    def move(self, positions):
-
-
-        letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-        print(positions)
-        old = positions[0] 
-        new = positions[1]
-        
-        
-        name = self.game[old]
-        if new in Board.legal_moves(name):    
-            self.game[new] = name
-            self.game[old] = '--'
-            print(self.game)
-        else:
-            print('This is not a valid move')
     
+    def move(self):
+
+        @click.command()
+        @click.option('--positions', prompt='What will be your next move?', nargs=2, type=str, help='Type two positions in chess format. The piece on position 1 will move to position 2.')
+        def movement(positions):
+            letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+            positions = [pos for pos in positions]
+
+            print(f"Received positions: {positions}")
+            for index, pos in enumerate(positions):
+                if pos.lower() in letters:
+                    pos = int(letters.index(pos))
+                    positions[index] = pos
+                    print(pos)
+
+            print(f"Modified positions: {positions}")
+            old = [7 - int(positions[1]), int(positions[0])]
+            new = [7 - int(positions[-1]), int(positions[-2])]
+            print(old, new)
+            
+            name = self.game[old[0], old[1]]
+            print(name)
+            if new in Board.legal_moves(name, old):    
+                self.game[new[0], new[1]] = name
+                self.game[old[0], old[1]] = '--'
+                print(self.game)
+            else:
+                print('This is not a valid move')
+        
+        if __name__ == '__main__':
+            movement()
     
 def placer(displace, names, amount=2):
     positions = []
@@ -192,9 +211,9 @@ def init():
     rooks = placer([0, 7], ['Br', 'Wr'])
     horses = placer([1, 6], ['Bh', 'Wh'])
     bishops = placer([2, 5], ['Bb', 'Wb'])
-    queen = placer(3, ['BQ', 'WQ'], amount = 1)
+    queens = placer(3, ['BQ', 'WQ'], amount = 1)
     kings = placer(4, ['BK', 'WK'], amount = 1)
-    setup = pawns + rooks + horses + bishops + queen + kings
+    setup = pawns + rooks + horses + bishops + queens + kings
     
 
     game = board(setup)
