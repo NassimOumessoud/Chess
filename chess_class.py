@@ -11,15 +11,70 @@ class Board():
     """Class that, given the name and starting position of a chess piece 
        can determine its possible future positions and move the piece. 
     """
-    def __init__(self, game):
-        self.game = game
+    def __init__(self):
+        self.game = self.board()
 
+    def __str__(self):
+        print(self.game)
+        return self.game
+
+
+    def placer(self, displace, names, AMOUNT=2):
+        positions = []
+        row = [0, 7]
+        
+        if AMOUNT < 2:
+            for i in range(len(names)):
+                x = displace
+                y = row[i]
+                name = names[i]
+                positions.append([y, x, name])
+        
+        
+        if AMOUNT == 2:
+            for i in range(AMOUNT):
+                y = row[i] 
+                name = names[i]
+                for k in range(AMOUNT):
+                    x = displace[k]
+                    positions.append([y, x, name])
+            
+        if AMOUNT > 2:
+            sign = [1, -1]
+            for i in range(2):
+                y = row[i] + sign[i]
+                name = names[i]
+                for dis in displace:
+                    x = dis
+                    positions.append([y, x, name])
                     
+        return positions
+     
+       
+    def board(self):
+        SQUARES = 8
+        grid = np.full((SQUARES, SQUARES), '--', dtype=np.dtype('U100'))
+
+        pawns = self.placer([i for i in range(8)], ['Bp', 'Wp'], AMOUNT=8)
+        rooks = self.placer([0, 7], ['Br', 'Wr'])
+        horses = self.placer([1, 6], ['Bh', 'Wh'])
+        bishops = self.placer([2, 5], ['Bb', 'Wb'])
+        queens = self.placer(3, ['BQ', 'WQ'], AMOUNT = 1)
+        kings = self.placer(4, ['BK', 'WK'], AMOUNT = 1)
+        starts = pawns + rooks + horses + bishops + queens + kings
+
+        for start in starts:
+            grid[start[0], start[1]] = start[2]
+
+        return grid
+         
+
     def legal_moves(name, position):
         """Function that for each chess piece determines the possible spots it 
         can move to."""
         
         tiles = range(8)
+        NAME = name[1]
         
         def diagonal(location, var):
             xd = location[1] - var
@@ -39,27 +94,22 @@ class Board():
                 return [ym, xm]
             
 
-        if name == 'p':
-#            if position != self.starting_position:
-            options = [position[0], position[1] + 1]
-#                
+        if NAME == 'p':
+            if name[0] == 'W':
+                options = [[position[0] - 1, position[1]], 
+                            [position[0] - 2, position[1]]]
 
-        name = name[1]
-        print(name)
-
-
-        if name == 'p':
-            options = [[position[0], position[1] + 1], 
-                        [position[0], position[1] + 2]]
-            print(options)
+            if name[0] == 'B':
+                options = [[position[0] + 1, position[1]], 
+                            [position[0] + 2, position[1]]]
         
     
-        if name == 'r':
+        if NAME == 'r':
             options = [[[tile, position[1]] for tile in tiles],
                       [[position[0], tile] for tile in tiles]]
                        
             
-        if name == 'h':
+        if NAME == 'h':
             displace = [-2, -1, 1, 2]
             options = []
             for i in displace:
@@ -76,14 +126,14 @@ class Board():
                         continue
             
             
-        if name == 'b':
+        if NAME == 'b':
             options = []
             for tile in tiles:
                 options.append([position[0], tile])
                 options.append([tile, position[1]])
                 
                 
-        if name == 'Q':
+        if NAME == 'Q':
             options = []
                     
             for tile in tiles:
@@ -105,7 +155,7 @@ class Board():
                     options.append([ym, xm])
                     
                         
-        if name == 'K':
+        if NAME == 'K':
             options = []
             signs = [-1, 1]
             for i in signs:
@@ -131,7 +181,6 @@ class Board():
     
     
     def move(self):
-
         @click.command()
         @click.option('--positions', prompt='What will be your next move?', nargs=2, type=str, help='Type two positions in chess format. The piece on position 1 will move to position 2.')
         def movement(positions):
@@ -143,83 +192,31 @@ class Board():
                 if pos.lower() in letters:
                     pos = int(letters.index(pos))
                     positions[index] = pos
-                    print(pos)
 
             print(f"Modified positions: {positions}")
-            old = [7 - int(positions[1]), int(positions[0])]
-            new = [7 - int(positions[-1]), int(positions[-2])]
+            old = [8 - int(positions[1]), int(positions[0])]
+            new = [8 - int(positions[-1]), int(positions[-2])]
             print(old, new)
             
             name = self.game[old[0], old[1]]
-            print(name)
+            
             if new in Board.legal_moves(name, old):    
                 self.game[new[0], new[1]] = name
                 self.game[old[0], old[1]] = '--'
                 print(self.game)
+                return self.move()
             else:
                 print('This is not a valid move')
-        
-        if __name__ == '__main__':
-            movement()
+                return self.move()
+        movement()
     
-def placer(displace, names, amount=2):
-    positions = []
-    row = [0, 7]
-    
-    
-    if amount < 2:
-        for i in range(len(names)):
-            x = displace
-            y = row[i]
-            name = names[i]
-            positions.append([y, x, name])
-    
-    
-    if amount == 2:
-        for i in range(amount):
-            y = row[i] 
-            name = names[i]
-            for k in range(amount):
-                x = displace[k]
-                positions.append([y, x, name])
-        
-    if amount > 2:
-        sign = [1, -1]
-        for i in range(2):
-            y = row[i] + sign[i]
-            name = names[i]
-            for dis in displace:
-                x = dis
-                positions.append([y, x, name])
-                
-    return positions
-     
-       
-def board(starts):
-    squares = 8
-    grid = np.full((squares, squares), '--', dtype=np.dtype('U100'))
-    for start in starts:
-        grid[start[0], start[1]] = start[2]
-    return grid
 
 
 def init():
     """Initialization function."""
 
-        
-    pawns = placer([i for i in range(8)], ['Bp', 'Wp'], amount=8)
-    rooks = placer([0, 7], ['Br', 'Wr'])
-    horses = placer([1, 6], ['Bh', 'Wh'])
-    bishops = placer([2, 5], ['Bb', 'Wb'])
-    queens = placer(3, ['BQ', 'WQ'], amount = 1)
-    kings = placer(4, ['BK', 'WK'], amount = 1)
-    setup = pawns + rooks + horses + bishops + queens + kings
-    
-
-    game = board(setup)
-    play = Board(game)
-    click.echo(game)
-
+    play = Board()
+    print(play.game)
     play.move()
     
 
