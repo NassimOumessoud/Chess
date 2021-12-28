@@ -79,27 +79,56 @@ class Board():
         return positions
          
 
+    def turn(self, name, valid=False):
+        
+        if self.count % 2 == 0:
+            color = 'W'
+
+            if name[0] != color:
+                if valid == True:
+                    print('It is not your turn, please wait until the other player has made a move!')
+                    return self.move()
+
+        elif self.count % 2 == 1:
+            color = 'B'
+
+            if name[0] != color:
+                if valid == True:
+                    print('It is not your turn, please wait until the other player has made a move!')
+                    return self.move()
+
+        return color
+
+
     def diagonal(self, location, vars=7):
             options  = []
+            name = self.game[location[1], location[0]]
+            print(location)
+            for sign in [-1, 1]:
+                for var in range(1, vars + 1):
+                    xd = location[1] - sign*var
+                    yd = location[0] + sign*var
+
+                    if (0 <= xd < 8) and (0 <= yd < 8):
+                        if self.game[yd, xd][0] == self.turn(name):
+                            break
+                        options.append([yd, xd])
 
 
-            for var in range(-vars, vars + 1):
-                xd = location[1] - var
-                yd = location[0] + var
-                
-                xm = location[1] + var
-                ym = location[0] + var
-
-                if (0 <= xd < 8) and (0 <= yd < 8):
-                    options.append([yd, xd])
-                
-                if (0 <= xm < 8) and (0 <= ym < 8):
-                    options.append([ym, xm])
+            for sign in [-1, 1]:
+                for var in range(1, vars + 1):
+                    xm = location[1] + sign*var
+                    ym = location[0] + sign*var
+                    
+                    if (0 <= xm < 8) and (0 <= ym < 8):
+                        if self.game[ym, xm][0] == self.turn(name):
+                            break
+                        options.append([ym, xm])
 
             return options
 
 
-    def legal_moves(self, name, position):
+    def legal_moves(self, name, position, new_position):
         """Function that for each chess piece determines the possible spots it 
         can move to."""
         
@@ -192,16 +221,9 @@ class Board():
             new = [8 - int(positions[-1]), int(positions[-2])]
             name = self.game[old[0], old[1]]
             
-            if self.count % 2 == 0:
-                if name[0] == 'B':
-                    print('It is not your turn, please wait until the other player has made a move!')
-                    return self.move()
-            elif self.count % 2 == 1:
-                if name[0] == 'W':
-                    print('It is not your turn, please wait until the other player has made a move!')
-                    return self.move()
+            self.turn(name, valid=True)
 
-            options = Board.legal_moves(self, name, old)
+            options = Board.legal_moves(self, name, old, new)
 
             for option in options:
                 if option == new:
@@ -216,17 +238,3 @@ class Board():
             return self.move()
         movement()
     
-
-
-def init():
-    """Initialization function."""
-
-    play = Board()
-    print(play.game)
-    play.move()
-    
-
-if __name__ == '__main__':
-    init()
-
-
