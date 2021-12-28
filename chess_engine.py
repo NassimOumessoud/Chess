@@ -16,6 +16,7 @@ class Board():
         if mode == 'standard':
             self.game = self.board()
             self.count = 0
+            self.moves = {}
 
         else:
             pass
@@ -204,13 +205,18 @@ class Board():
     
     def move(self):
 
-
         @click.command()
         @click.option('--positions', prompt='What will be your next move?', nargs=2, type=str, help='Type two positions in chess format. The piece on position 1 will move to position 2.')
         def movement(positions):
 
+            #if positions == 'o-o-o':
+            
+
+
             letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
             positions = [position for position in positions]
+            
+            move = [f"{positions[0]}{positions[1]} --> {positions[-2]}{positions[-1]}"]
 
             for index, pos in enumerate(positions):
                 if pos.lower() in letters:
@@ -230,6 +236,8 @@ class Board():
                     self.game[new[0], new[1]] = name
                     self.game[old[0], old[1]] = '--'
                     self.count += 1
+                    self.moves[self.count] = move
+                    print(self.moves)
 
                     print(self.game)
                     return self.move()
