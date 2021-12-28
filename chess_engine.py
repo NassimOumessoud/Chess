@@ -15,8 +15,8 @@ class Board():
 
         if mode == 'standard':
             self.game = self.board()
-            self.colors = ['W', 'B']
-            
+            self.count = 0
+
         else:
             pass
             
@@ -179,6 +179,7 @@ class Board():
         @click.command()
         @click.option('--positions', prompt='What will be your next move?', nargs=2, type=str, help='Type two positions in chess format. The piece on position 1 will move to position 2.')
         def movement(positions):
+
             letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
             positions = [position for position in positions]
 
@@ -190,15 +191,24 @@ class Board():
             old = [8 - int(positions[1]), int(positions[0])]
             new = [8 - int(positions[-1]), int(positions[-2])]
             name = self.game[old[0], old[1]]
-            if name[0] != self.turn:
-                print('It is not your turn, please wait until the other player has made a move!')
+            
+            if self.count % 2 == 0:
+                if name[0] == 'B':
+                    print('It is not your turn, please wait until the other player has made a move!')
+                    return self.move()
+            elif self.count % 2 == 1:
+                if name[0] == 'W':
+                    print('It is not your turn, please wait until the other player has made a move!')
+                    return self.move()
+
             options = Board.legal_moves(self, name, old)
 
             for option in options:
                 if option == new:
                     self.game[new[0], new[1]] = name
                     self.game[old[0], old[1]] = '--'
-    
+                    self.count += 1
+
                     print(self.game)
                     return self.move()
 
