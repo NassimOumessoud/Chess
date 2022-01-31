@@ -16,6 +16,7 @@ class Board():
         if mode == 'standard':
             self.game = self.board()
             self.count = 0
+            self.letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
             self.moves = {}
 
         else:
@@ -80,31 +81,22 @@ class Board():
         return positions
          
 
-    def turn(self, name, valid=False):
-        
+    def turn(self, name):
+        """"Function to check whether the right player makes the move."""
         if self.count % 2 == 0:
             color = 'W'
-
-            if name[0] != color:
-                if valid == True:
-                    print('It is not your turn, please wait until the other player has made a move!')
-                    return self.move()
 
         elif self.count % 2 == 1:
             color = 'B'
 
-            if name[0] != color:
-                if valid == True:
-                    print('It is not your turn, please wait until the other player has made a move!')
-                    return self.move()
-
-        return color
+        if name[0] != color:
+            print('It is not your turn, please wait until the other player has made a move!')
+            return self.move()
 
 
     def diagonal(self, location, vars=7):
             options  = []
             name = self.game[location[1], location[0]]
-            print(location)
             for sign in [-1, 1]:
                 for var in range(1, vars + 1):
                     xd = location[1] - sign*var
@@ -135,17 +127,28 @@ class Board():
         
         tiles = range(8)
         NAME = name[1]
+        signs = [-1, 1]
 
 
         if NAME == 'p':
             if name[0] == 'W':
-                options = [[position[0] - 1, position[1]], 
-                            [position[0] - 2, position[1]]]
+                sign = signs[0]
+            elif name[0] == 'B':
+                sign = signs[1]
 
-            if name[0] == 'B':
-                options = [[position[0] + 1, position[1]], 
-                            [position[0] + 2, position[1]]]
-        
+
+            for value in self.moves.values():
+                value = value[0]
+                cn_position = self.letters[position[1]]
+
+                if f"{str(cn_position), str(position[0])}" == f"{value[-2], value[-1]}":
+                    options = [[position[0] + sign, position[1]]]
+                    return options
+
+
+            options = [[position[0] + sign, position[1]], 
+                                [position[0] + 2 * sign, position[1]]]
+            
     
         if NAME == 'b':
             options = self.diagonal(position)
@@ -209,27 +212,34 @@ class Board():
         @click.option('--positions', prompt='What will be your next move?', nargs=2, type=str, help='Type two positions in chess format. The piece on position 1 will move to position 2.')
         def movement(positions):
 
-            #if positions == 'o-o-o':
+            #if positions == 'o-o-o':     
+
             
-
-
-            letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
             positions = [position for position in positions]
             
             move = [f"{positions[0]}{positions[1]} --> {positions[-2]}{positions[-1]}"]
 
-            for index, pos in enumerate(positions):
-                if pos.lower() in letters:
-                    pos = int(letters.index(pos))
-                    positions[index] = pos
+            for index, position in enumerate(positions):
+                if position.lower() in self.letters:
+                    positions[index] = int(self.letters.index(position))
+
 
             old = [8 - int(positions[1]), int(positions[0])]
             new = [8 - int(positions[-1]), int(positions[-2])]
+            path = [old[0]-new[0], old[1]-new[1]]
+            print(path)
             name = self.game[old[0], old[1]]
             
-            self.turn(name, valid=True)
+            self.turn(name)
 
             options = Board.legal_moves(self, name, old, new)
+            for option in options:
+    
+                if option != new and name[1] != 'h':
+                    if self.game[option[0], option[1]] != '--':
+                        print(option, new)
+                        print('This is not a valid move, another piece is in the way. Please provide a new move.')        
+                        return self.move()
 
             for option in options:
                 if option == new:
@@ -237,12 +247,11 @@ class Board():
                     self.game[old[0], old[1]] = '--'
                     self.count += 1
                     self.moves[self.count] = move
-                    print(self.moves)
 
                     print(self.game)
                     return self.move()
 
-            print("This is not a valid move, please type: circle(position) to see all valid moves for a piece on a position.")
+            print("This is not a valid move, please type a valid move.")
             return self.move()
         movement()
     
