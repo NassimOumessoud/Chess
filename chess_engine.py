@@ -1,11 +1,5 @@
-from turtle import pos
 import numpy as np 
 import click
-"""
-1. Initialize board and pieces (images) and starting positions for each piece.
-    By using functions.
-2. Use Class to determine next moves and legal moves, starting game is an instance of the class
-"""
 
 
 class Board():
@@ -19,6 +13,7 @@ class Board():
             self.count = 0
             self.letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
             self.moves = {}
+            self.player = 'White'
 
         else:
             pass
@@ -79,18 +74,17 @@ class Board():
 
     def turn(self, name):
         """"Function to check whether the right player makes the move."""
-        if self.count % 2 == 0:
-            color = 'W'
 
-        elif self.count % 2 == 1:
-            color = 'B'
+        colours = ['White', 'Black']
+        self.player = colours[self.count % 2]
 
-        if name[0] != color:
-            print('It is not your turn, please wait until the other player has made a move!')
-            return self.move()
+        if name != self.player[0]:
+            self.error(type_='Turn')
+        self.player = colours[1 - self.count % 2]
 
 
     def error(self, type_='False', redo=True, block=None):
+        """"Function used to call appropriate error messages for invalid moves."""
 
         if type_ == 'False':
             print("This is not a valid move")
@@ -100,36 +94,41 @@ class Board():
 
         if type_ == 'Own':
             print("You can not take your own piece, please provide a valid move.")
+
+        if type_ == 'Turn':
+            print(f'It is {self.player}\'s turn, please enter a valid move')    
+
         if redo:
             return self.move()
 
 
-    def diagonal(self, location, vars=7, quadrant=0):
-            options  = []
-            signs = [-1, 1]
-            
-            for sign in signs:
-                for var in range(1, vars + 1):
-                    xd = location[1] - sign*var
-                    yd = location[0] + sign*var
+    def diagonal(self, location, vars=7):
+        """Fucntion to provide diagonal positions when given a certain position on the chess board. 
+        Where the length of the diagonal can be adjusted."""
+        options  = []
+        signs = [-1, 1]
+        
+        for sign in signs:
+            for var in range(1, vars + 1):
+                xd = location[1] - sign*var
+                yd = location[0] + sign*var
 
-                    if (0 <= xd < 8) and (0 <= yd < 8):
-                        options.append([yd, xd])
+                if (0 <= xd < 8) and (0 <= yd < 8):
+                    options.append([yd, xd])
 
-            
-            for sign in signs:
-                for var in range(1, vars + 1):
-                    xm = location[1] + sign*var
-                    ym = location[0] + sign*var
-                    
-                    if (0 <= xm < 8) and (0 <= ym < 8):
-                        options.append([ym, xm])
+        for sign in signs:
+            for var in range(1, vars + 1):
+                xm = location[1] + sign*var
+                ym = location[0] + sign*var
+                
+                if (0 <= xm < 8) and (0 <= ym < 8):
+                    options.append([ym, xm])
 
-            return options
+        return options
 
 
     def blocking(self, current, new, possible_moves):
-
+        """"Function to check whether pieces are blocking the move to be made."""
         step_0 = 1
         step_1 = 1
         yn = new[0]
@@ -252,7 +251,7 @@ class Board():
     def move(self):
 
         @click.command()
-        @click.option('--positions', prompt='What will be your next move?', nargs=2, type=str, help='Type two positions in chess format. The piece on position 1 will move to position 2.')
+        @click.option('--positions', prompt=f'What will be {self.player}\'s next move?', nargs=2, type=str, help='Type two positions in chess format. The piece on position 1 will move to position 2.')
         def movement(positions):
             
             positions = [position for position in positions]
@@ -269,7 +268,8 @@ class Board():
             new = [8 - int(positions[-1]), int(positions[-2])]
             name = self.game[old[0], old[1]]
             
-            self.turn(name)
+            self.turn(name[0])
+            
             if name[0] == self.game[new[0], new[1]][0]:
                 self.error(type_='Own')
 
