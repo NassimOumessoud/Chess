@@ -1,3 +1,4 @@
+from turtle import pos
 import numpy as np 
 import click
 """
@@ -21,11 +22,6 @@ class Board():
 
         else:
             pass
-            
-
-    #def __str__(self):
-    #    print(self.game)
-    #    return self.game
 
 
     def board(self):
@@ -94,31 +90,74 @@ class Board():
             return self.move()
 
 
-    def diagonal(self, location, vars=7):
+    def error(self, type_='False', redo=True, block=None):
+
+        if type_ == 'False':
+            print("This is not a valid move")
+
+        if type_ == 'Block':
+            print(f'The {self.game[block[0], block[1]]} piece on {self.letters[block[1]]}{8 - block[0]} is blocking your path, please type a valid move.')
+
+        if type_ == 'Own':
+            print("You can not take your own piece, please provide a valid move.")
+        if redo:
+            return self.move()
+
+
+    def diagonal(self, location, vars=7, quadrant=0):
             options  = []
-            name = self.game[location[1], location[0]]
-            for sign in [-1, 1]:
+            signs = [-1, 1]
+            
+            for sign in signs:
                 for var in range(1, vars + 1):
                     xd = location[1] - sign*var
                     yd = location[0] + sign*var
 
                     if (0 <= xd < 8) and (0 <= yd < 8):
-                        if self.game[yd, xd][0] == self.turn(name):
-                            break
                         options.append([yd, xd])
 
-
-            for sign in [-1, 1]:
+            
+            for sign in signs:
                 for var in range(1, vars + 1):
                     xm = location[1] + sign*var
                     ym = location[0] + sign*var
                     
                     if (0 <= xm < 8) and (0 <= ym < 8):
-                        if self.game[ym, xm][0] == self.turn(name):
-                            break
                         options.append([ym, xm])
 
             return options
+
+
+    def blocking(self, current, new, possible_moves):
+
+        step_0 = 1
+        step_1 = 1
+        yn = new[0]
+        xn = new[1]
+
+        if current[0] > new[0]:
+            step_0 = -1
+            yn -= 2
+        if current[1] > new[1]:
+            step_1 = -1
+            xn -= 2
+
+        if current[0] == new[0]:
+            for j in range(current[1] + step_1, new[1], step_1):
+                if self.game[current[0], j] != '--':
+                    self.error(type_='Block', block=[current[0], j])
+
+        if current[1] == new[1]:
+            for i in range(current[0] + step_0, new[0], step_0):
+                if self.game[i, current[1]] != '--':
+                    self.error(type_='Block', block=[i, current[1]])
+        
+        for i in range(current[0], yn + 1, step_0):
+            for j in range(current[1], xn + 1, step_1):
+                if np.abs(current[0] - i) == np.abs(current[1] - j):
+                    if [i, j] in possible_moves:
+                        if (self.game[i, j] != '--') and ([i, j] != current) and ([i, j] != new):
+                            self.error('Block', block=[i, j])
 
 
     def legal_moves(self, name, position, new_position):
@@ -149,7 +188,7 @@ class Board():
             options = [[position[0] + sign, position[1]], 
                                 [position[0] + 2 * sign, position[1]]]
             
-    
+
         if NAME == 'b':
             options = self.diagonal(position)
             
@@ -169,15 +208,16 @@ class Board():
                         options.append([x, y])
                     else:
                         continue
+            return options
             
-            
+
         if NAME == 'r':
             options = []
             for tile in tiles:
                 options.append([position[0], tile])
                 options.append([tile, position[1]])
 
-                
+
         if NAME == 'Q':
             options = []
                     
@@ -187,12 +227,12 @@ class Board():
             diagonal_options = self.diagonal(position)
             
             options.extend(diagonal_options)
-                        
-                        
+
+
         if NAME == 'K':
             options = []
  
-            for i in [-1, 1]:
+            for i in signs:
                 if (0 <= position[1] + i < 8):
                     options.append([position[0], position[1] + i])
                 
@@ -201,8 +241,11 @@ class Board():
 
             diagonal_options = self.diagonal(position, vars=1)
             options.extend(diagonal_options)
-            
-          
+            return options
+
+
+        self.blocking(position, new_position, options)
+
         return options
     
     
@@ -211,9 +254,6 @@ class Board():
         @click.command()
         @click.option('--positions', prompt='What will be your next move?', nargs=2, type=str, help='Type two positions in chess format. The piece on position 1 will move to position 2.')
         def movement(positions):
-
-            #if positions == 'o-o-o':     
-
             
             positions = [position for position in positions]
             
@@ -223,23 +263,18 @@ class Board():
                 if position.lower() in self.letters:
                     positions[index] = int(self.letters.index(position))
 
-
+            #Change format to [y, x], i.e. E2 --> 2,'5'
+            #Notation in script is now [0:7, 0:7] --> [up:down, left:right]
             old = [8 - int(positions[1]), int(positions[0])]
             new = [8 - int(positions[-1]), int(positions[-2])]
-            path = [old[0]-new[0], old[1]-new[1]]
-            print(path)
             name = self.game[old[0], old[1]]
             
             self.turn(name)
+            if name[0] == self.game[new[0], new[1]][0]:
+                self.error(type_='Own')
 
             options = Board.legal_moves(self, name, old, new)
-            for option in options:
-    
-                if option != new and name[1] != 'h':
-                    if self.game[option[0], option[1]] != '--':
-                        print(option, new)
-                        print('This is not a valid move, another piece is in the way. Please provide a new move.')        
-                        return self.move()
+            
 
             for option in options:
                 if option == new:
@@ -251,7 +286,7 @@ class Board():
                     print(self.game)
                     return self.move()
 
-            print("This is not a valid move, please type a valid move.")
+            self.error()
             return self.move()
         movement()
     
